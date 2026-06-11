@@ -31,7 +31,9 @@ st.set_page_config(
 # ── Styles ────────────────────────────────────────────────────────────────────
 st.markdown(
     """
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+    * { font-family: 'EB Garamond', serif !important; }
     .main-header {
         font-size: 2rem;
         font-weight: 700;
