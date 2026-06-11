@@ -31,6 +31,7 @@ st.set_page_config(
 # ── Styles ────────────────────────────────────────────────────────────────────
 st.markdown(
     """
+    <style>
     .main-header {
         font-size: 2rem;
         font-weight: 700;
