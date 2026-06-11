@@ -31,7 +31,9 @@ st.set_page_config(
 # ── Styles ────────────────────────────────────────────────────────────────────
 st.markdown(
     """
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+    * { font-family: 'EB Garamond', serif !important; }
     .main-header {
         font-size: 2rem;
         font-weight: 700;
@@ -84,6 +86,13 @@ with st.sidebar:
     )
 
     st.markdown("**Time Window**")
+    tz_name = st.selectbox(
+        "Timezone",
+        options=["UTC", "US/Eastern", "US/Central", "US/Pacific", "Europe/London"],
+        index=0,
+    )
+    tz = pytz.timezone(tz_name)
+
     col1, col2 = st.columns(2)
     with col1:
         start_date = st.date_input("Start Date", value=datetime.now().date() - timedelta(days=1))
@@ -92,8 +101,8 @@ with st.sidebar:
         end_date = st.date_input("End Date", value=datetime.now().date())
         end_time = st.time_input("End Time", value=datetime.strptime("14:00", "%H:%M").time())
 
-    start_dt = datetime.combine(start_date, start_time).replace(tzinfo=pytz.UTC)
-    end_dt = datetime.combine(end_date, end_time).replace(tzinfo=pytz.UTC)
+    start_dt = tz.localize(datetime.combine(start_date, start_time)).astimezone(pytz.UTC)
+    end_dt = tz.localize(datetime.combine(end_date, end_time)).astimezone(pytz.UTC)
 
     st.markdown("---")
     st.markdown("### 🔍 Filters")
@@ -114,12 +123,13 @@ with st.sidebar:
         st.info("Classifies wallets into Smart Money, Whale, Retail, Sniper, Fresh Wallet")
 
     st.markdown("---")
-    rpc_url = st.text_input(
-        "Custom RPC URL (optional)",
-        placeholder="https://mainnet.helius-rpc.com/?api-key=...",
+    helius_key = st.text_input(
+        "Helius API Key",
+        placeholder="your-api-key-here",
         type="password",
-        help="Helius or QuickNode RPC recommended for reliable data",
+        help="Get a free key at helius.dev — strongly recommended for accurate data",
     )
+    rpc_url = f"https://mainnet.helius-rpc.com/?api-key={helius_key}" if helius_key else None
 
     run_analysis = st.button("🚀 Run Analysis", type="primary", use_container_width=True)
 
@@ -157,7 +167,7 @@ if DEMO_MODE:
 else:
     with st.spinner("Fetching swap transactions…"):
         try:
-            swaps_df = fetch_swaps(token_address, start_dt, end_dt, rpc_url=rpc_url or None)
+            swaps_df = fetch_swaps(token_address, start_dt, end_dt, rpc_url=rpc_url)
         except Exception as e:
             st.error(f"Error fetching swaps: {e}")
             st.stop()
@@ -176,7 +186,7 @@ else:
         st.stop()
 
     with st.spinner(f"Querying current balances for {len(buyers_df):,} wallets…"):
-        buyers_df = fetch_wallet_balances(buyers_df, token_address, rpc_url=rpc_url or None)
+        buyers_df = fetch_wallet_balances(buyers_df, token_address, rpc_url=rpc_url)
 
     with st.spinner("Calculating retention…"):
         buyers_df = calculate_retention(buyers_df)
